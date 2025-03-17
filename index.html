@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Design Grade Viewer</title>
+    <style>
+        /* Game theme colors */
+        :root {
+            --background-color: rgb(25, 25, 35);
+            --sidebar-color: rgb(45, 45, 65);
+            --accent-color: rgb(116, 70, 235);
+            --accent-hover: rgb(140, 90, 255);
+            --table-bg: rgb(35, 35, 50);
+            --table-grid: rgb(70, 70, 95);
+            --text-color: rgb(220, 220, 255);
+            --highlight-color: rgb(255, 215, 0);
+            --selection-bg: rgb(80, 50, 160);
+            --warning-color: rgb(255, 99, 71);
+            --checkbox-selected: rgb(140, 255, 140);
+            --checkbox-unselected: rgb(255, 140, 140);
+            --border-color: rgb(70, 40, 120);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background-color: var(--sidebar-color);
+            width: 250px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 3px solid var(--border-color);
+        }
+
+        .title {
+            color: var(--highlight-color);
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .game-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: 3px solid rgb(50, 20, 80);
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            max-width: 220px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .game-button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .game-button:active {
+            background-color: rgb(100, 60, 200);
+        }
+
+        .game-select {
+            background-color: var(--table-bg);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 5px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 220px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .game-select option {
+            background-color: var(--table-bg);
+            color: var(--text-color);
+        }
+
+        .pixel-art {
+            font-size: 36px;
+            color: var(--accent-color);
+            margin: auto 0 20px;
+        }
+
+        .max-score {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--highlight-color);
+            margin-bottom: 10px;
+        }
+
+        /* Content Area Styles */
+        .content {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+        }
+
+        /* Table Styles */
+        .table-container {
+            margin-bottom: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--table-bg);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid var(--table-grid);
+        }
+
+        th {
+            background-color: var(--sidebar-color);
+            color: var(--highlight-color);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .editable-cell {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            background-color: var(--table-bg);
+            color: var(--text-color);
+            border: 1px solid var(--accent-color);
+            padding: 3px;
+            text-align: center;
+        }
+
+        /* Attendance Panel Styles */
+        .attendance-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .attendance-container {
+            background-color: var(--table-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .attendance-title {
+            color: var(--highlight-color);
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 5px;
+        }
+
+        .attendance-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .game-checkbox {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background-color: var(--checkbox-unselected);
+            border: 1px solid var(--table-grid);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .game-checkbox:checked {
+            background-color: var(--checkbox-selected);
+        }
+
+        .game-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 4px;
+            height: 9px;
+            border: solid black;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .game-checkbox:not(:checked)::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 10px;
+            height: 10px;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .checkbox-label {
+            font-size: 12px;
+        }
+
+        /* Footer Grade Summary Styles */
+        .grade-summary {
+            background-color: var(--sidebar-color);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 15px;
+            border-top: 3px solid var(--border-color);
+        }
+
+        .status-label {
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 3px solid var(--border-color);
+            }
+            .attendance-panels {
+                grid-template-columns: 1fr;
+            }
+            .grade-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="title">GRADE QUEST</div>
+            <div class="subtitle">Game Design Course Tracker</div>
+            <button id="uploadButton" class="game-button">📂 Upload CSV</button>
+            <select id="studentDropdown" class="game-select">
+                <option value="" disabled selected>Select Player</option>
+            </select>
+            <button id="showButton" class="game-button">🎮 Show Grades</button>
+            <div class="pixel-art">👾</div>
+            <div class="max-score">MAX SCORE: 100</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Table -->
+            <div class="table-container">
+                <table id="gradesTable">
+                    <thead>
+                        <tr>
+                            <th>Lecture Category</th>
+                            <th>Score</th>
+                            <th>Lab Category</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Prelim Exam</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                            <td>MP1</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td>Quiz Essay</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                            <td>MP2</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td>Quiz PVM</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                            <td>MP3</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td>Quiz Java Basics</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                            <td>MP3 Docu</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td>Quiz JS Intro</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                            <td>Java 1</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>Java 2</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>JS 1</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>JS 2</td>
+                            <td class="editable-cell"><input type="number" min="0" max="100" step="0.1" disabled></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Attendance Panels -->
+            <div class="attendance-panels">
+                <!-- Lecture Attendance -->
+                <div class="attendance-container">
+                    <div class="attendance-title">LECTURE ATTENDANCE</div>
+                    <div id="lectureAttendance" class="attendance-checkboxes">
+                        <!-- Checkboxes will be added here by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Lab Attendance -->
+                <div class="attendance-container">
+                    <div class="attendance-title">LAB ATTENDANCE</div>
+                    <div id="labAttendance" class="attendance-checkboxes">
+                        <!-- Checkboxes will be added here by JavaScript -->
+                    </div>
+                </div>
+                <p style="color:white;"><b>LECTURE PRELIM GRADE FORMULA (for Programming 2)</b><br><br>
+
+                    Prelim Grade = 60% Prelim Exam + 40% Prelim Class Standing<br><br>
+                
+                    Prelim Class Standing = 60% Prelim Quizzes + 40% Attendance<br><br>
+                
+                    Prelim Quizzes = Essay + PVM + Java Basics + Intro to JS<br><br>
+                
+                    Attendance = 100% default - 10% per occurred absence
+                </p>
+                
+                <p style="color:white;"><b>LABORATORY PRELIM GRADE FORMULA (for Programming 2)</b><br><br>
+                
+                    Prelim Grade = 60% Prelim Exam + 40% Prelim Class Standing<br><br>
+                
+                    Prelim Exam = 20% Java 1 + 30% Java 2 + 20% JS 1 + 30% JS 2<br><br>
+                
+                    Prelim Class Standing = 60% Lab Work + 40% Attendance<br><br>
+                
+                    Lab Work = MP1 + MP2 + MP3 + MP3 (Docu)<br><br>
+                
+                    Attendance = 100% default - 10% per occurred absence
+                </p>              
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Summary Footer -->
+    <div class="grade-summary">
+        <div id="studentNameLabel" class="status-label">PLAYER: ---</div>
+        <div id="lectureGradeLabel" class="status-label">LECTURE XP: --</div>
+        <div id="labGradeLabel" class="status-label">LAB XP: --</div>
+        <div id="finalGradeLabel" class="status-label">FINAL SCORE: --</div>
+    </div>
+
+    <!-- Hidden file input for CSV upload -->
+    <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+
+    <script>
+        // Student class
+        class Student {
+            constructor(name, prelimExam, quizEssay, quizPVM, quizJavaBasics, 
+                       quizJSIntro, lectureAttendanceScore, mp1, mp2, mp3, mp3Docu,
+                       java1, java2, js1, js2, labAttendanceScore) {
+                this.name = name;
+                this.prelimExam = parseFloat(prelimExam) || 0;
+                this.quizEssay = parseFloat(quizEssay) || 0;
+                this.quizPVM = parseFloat(quizPVM) || 0;
+                this.quizJavaBasics = parseFloat(quizJavaBasics) || 0;
+                this.quizJSIntro = parseFloat(quizJSIntro) || 0;
+                
+                // Process lecture attendance
+                this.lectureAttendance = new Array(10).fill(true);
+                const lectureAbsences = Math.floor((100 - parseFloat(lectureAttendanceScore)) / 10);
+                for (let i = 0; i < lectureAbsences; i++) {
+                    this.lectureAttendance[i] = false;
+                }
+                
+                this.mp1 = parseFloat(mp1) || 0;
+                this.mp2 = parseFloat(mp2) || 0;
+                this.mp3 = parseFloat(mp3) || 0;
+                this.mp3Docu = parseFloat(mp3Docu) || 0;
+                this.java1 = parseFloat(java1) || 0;
+                this.java2 = parseFloat(java2) || 0;
+                this.js1 = parseFloat(js1) || 0;
+                this.js2 = parseFloat(js2) || 0;
+                
+                // Process lab attendance
+                this.labAttendance = new Array(10).fill(true);
+                const labAbsences = Math.floor((100 - parseFloat(labAttendanceScore)) / 10);
+                for (let i = 0; i < labAbsences; i++) {
+                    this.labAttendance[i] = false;
+                }
+            }
+            
+            getLectureAttendanceScore() {
+                const presentCount = this.lectureAttendance.filter(present => present).length;
+                return 100 - ((10 - presentCount) * 10);
+            }
+            
+            getLabAttendanceScore() {
+                const presentCount = this.labAttendance.filter(present => present).length;
+                return 100 - ((10 - presentCount) * 10);
+            }
+        }
+
+        // Global variables
+        let studentsData = [];
+        const tableInputs = document.querySelectorAll('#gradesTable input');
+
+        // Event listeners
+        document.getElementById('uploadButton').addEventListener('click', () => {
+            document.getElementById('csvFileInput').click();
+        });
+
+        document.getElementById('csvFileInput').addEventListener('change', event => {
+            const file = event.target.files[0];
+            if (file) {
+                loadCSV(file);
+            }
+        });
+
+        document.getElementById('showButton').addEventListener('click', () => {
+            const selectedName = document.getElementById('studentDropdown').value;
+            if (selectedName) {
+                displayStudentGrades(selectedName);
+                
+                // Alert for visualization
+                alert("Player data loaded successfully!");
+            }
+        });
+
+        // Setup attendance checkboxes
+        function setupAttendanceCheckboxes() {
+            const lectureAttendanceContainer = document.getElementById('lectureAttendance');
+            const labAttendanceContainer = document.getElementById('labAttendance');
+            
+            lectureAttendanceContainer.innerHTML = '';
+            labAttendanceContainer.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                // Lecture attendance checkbox
+                const lectureCheckbox = document.createElement('div');
+                lectureCheckbox.className = 'checkbox-container';
+                lectureCheckbox.innerHTML = `
+                    <input type="checkbox" class="game-checkbox lecture-checkbox" id="lecture-${i}" data-index="${i}" disabled>
+                    <label for="lecture-${i}" class="checkbox-label">online class ${i+1}</label>
+                `;
+                lectureAttendanceContainer.appendChild(lectureCheckbox);
+                
+                // Lab attendance checkbox
+                const labCheckbox = document.createElement('div');
+                labCheckbox.className = 'checkbox-container';
+                labCheckbox.innerHTML = `
+                    <input type="checkbox" class="game-checkbox lab-checkbox" id="lab-${i}" data-index="${i}" disabled>
+                    <label for="lab-${i}" class="checkbox-label">class ${i+1}</label>
+                `;
+                labAttendanceContainer.appendChild(labCheckbox);
+            }
+            
+            // Add event listeners
+            document.querySelectorAll('.lecture-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', event => {
+                    const index = parseInt(event.target.dataset.index);
+                    const selectedName = document.getElementById('studentDropdown').value;
+                    
+                    if (selectedName) {
+                        const student = studentsData.find(s => s.name === selectedName);
+                        if (student) {
+                            student.lectureAttendance[index] = checkbox.checked;
+                            updateGradeLabels(student);
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.lab-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', event => {
+                    const index = parseInt(event.target.dataset.index);
+                    const selectedName = document.getElementById('studentDropdown').value;
+                    
+                    if (selectedName) {
+                        const student = studentsData.find(s => s.name === selectedName);
+                        if (student) {
+                            student.labAttendance[index] = checkbox.checked;
+                            updateGradeLabels(student);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Input change handlers for the table
+        tableInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                const selectedName = document.getElementById('studentDropdown').value;
+                if (selectedName) {
+                    updateStudentGradesFromTable(selectedName);
+                }
+            });
+        });
+
+        // Load CSV file
+        function loadCSV(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const csv = event.target.result;
+                const lines = csv.split('\n');
+                
+                // Clear existing data
+                studentsData = [];
+                const dropdown = document.getElementById('studentDropdown');
+                dropdown.innerHTML = '<option value="" disabled selected>Select Player</option>';
+                
+                // Skip header row
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    const values = lines[i].split(',');
+                    if (values.length < 16) continue;
+                    
+                    // Cap values at 100
+                    for (let j = 1; j < values.length; j++) {
+                        const value = values[j].trim();
+                        values[j] = value === '' ? '0' : Math.min(parseFloat(value), 100).toString();
+                    }
+                    
+                    const student = new Student(
+                        values[0], values[1], values[2], values[3], values[4], 
+                        values[5], values[6], values[7], values[8], values[9], 
+                        values[10], values[11], values[12], values[13], values[14], values[15]
+                    );
+                    
+                    studentsData.push(student);
+                    
+                    // Add to dropdown
+                    const option = document.createElement('option');
+                    option.value = values[0];
+                    option.textContent = values[0];
+                    dropdown.appendChild(option);
+                }
+                
+                alert(`Player data loaded successfully!\n${studentsData.length} players found.`);
+            };
+            
+            reader.onerror = function() {
+                alert("Error reading data file!");
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // Display student grades
+        function displayStudentGrades(name) {
+            const student = studentsData.find(s => s.name === name);
+            
+            if (student) {
+                // Update input fields in the table
+                const inputs = document.querySelectorAll('#gradesTable input');
+                
+                // Enable all inputs
+                inputs.forEach(input => input.disabled = false);
+                
+                // Set values for lecture scores
+                inputs[0].value = student.prelimExam.toFixed(1);
+                inputs[1].value = student.quizEssay.toFixed(1);
+                inputs[2].value = student.quizPVM.toFixed(1);
+                inputs[3].value = student.quizJavaBasics.toFixed(1);
+                inputs[4].value = student.quizJSIntro.toFixed(1);
+                
+                // Set values for lab scores
+                inputs[5].value = student.mp1.toFixed(1);
+                inputs[6].value = student.mp2.toFixed(1);
+                inputs[7].value = student.mp3.toFixed(1);
+                inputs[8].value = student.mp3Docu.toFixed(1);
+                inputs[9].value = student.java1.toFixed(1);
+                inputs[10].value = student.java2.toFixed(1);
+                inputs[11].value = student.js1.toFixed(1);
+                inputs[12].value = student.js2.toFixed(1);
+                
+                // Update attendance checkboxes
+                const lectureCheckboxes = document.querySelectorAll('.lecture-checkbox');
+                const labCheckboxes = document.querySelectorAll('.lab-checkbox');
+                
+                // Enable all checkboxes
+                lectureCheckboxes.forEach(cb => cb.disabled = false);
+                labCheckboxes.forEach(cb => cb.disabled = false);
+                
+                // Set checkbox values
+                lectureCheckboxes.forEach((checkbox, index) => {
+                    checkbox.checked = student.lectureAttendance[index];
+                });
+                
+                labCheckboxes.forEach((checkbox, index) => {
+                    checkbox.checked = student.labAttendance[index];
+                });
+                
+                // Update labels
+                document.getElementById('studentNameLabel').textContent = `PLAYER: ${student.name}`;
+                updateGradeLabels(student);
+            }
+        }
+
+        // Update grade labels
+        function updateGradeLabels(student) {
+            // Calculate Lecture Attendance
+            const lectureAttendanceScore = student.getLectureAttendanceScore();
+            
+            // Calculate Lab Attendance
+            const labAttendanceScore = student.getLabAttendanceScore();
+            
+            // Calculate Class Standing for Lecture
+            const quizPVM = (student.quizPVM / 60) * 100;
+            const quizJavaBasics = (student.quizJavaBasics / 40) * 100;
+            const quizJSIntro = (student.quizJSIntro / 40) * 100;
+            const quizAvg = (student.quizEssay + quizPVM + quizJavaBasics + quizJSIntro) / 4;
+            const classStanding = (0.62 * quizAvg) + (0.10 * lectureAttendanceScore) + 30;
+            
+            // Calculate Lecture Grade
+            const lectureGrade = Math.round((0.54 * student.prelimExam) + (0.46 * classStanding));
+            
+            // Calculate Lab Work Average
+            const labScores = [
+                student.mp1, student.mp2, student.mp3, student.mp3Docu,
+                student.java1, student.java2, student.js1, student.js2
+            ];
+            
+            let labWorkAvg = 0;
+            for (const score of labScores) {
+                labWorkAvg += score;
+            }
+            labWorkAvg /= labScores.length;
+            
+            const labGrade = Math.floor((0.90 * labWorkAvg) + (0.10 * labAttendanceScore));
+            
+            // Calculate final grade (40% lecture, 60% lab)
+            const finalGrade = (lectureGrade * 0.4) + (labGrade * 0.6);
+            
+            // Update labels
+            document.getElementById('lectureGradeLabel').textContent = `LECTURE XP: ${Math.round(lectureGrade)}`;
+            document.getElementById('labGradeLabel').textContent = `LAB XP: ${Math.round(labGrade)}`;
+            
+            const finalGradeLabel = document.getElementById('finalGradeLabel');
+            finalGradeLabel.textContent = `FINAL SCORE: ${Math.round(finalGrade)}`;
+            
+            // Apply color styling based on grade
+            if (finalGrade >= 90) {
+                finalGradeLabel.style.color = 'var(--highlight-color)'; // Gold for high scores
+            } else if (finalGrade >= 75) {
+                finalGradeLabel.style.color = 'var(--checkbox-selected)'; // Green for passing
+            } else {
+                finalGradeLabel.style.color = 'var(--warning-color)'; // Red for failing
+            }
+        }
+
+        // Update student grades from table
+        function updateStudentGradesFromTable(name) {
+            const student = studentsData.find(s => s.name === name);
+            
+            if (student) {
+                try {
+                    // Get all input values
+                    const inputs = document.querySelectorAll('#gradesTable input');
+                    
+                    // Update the student object with values from the inputs
+                    student.prelimExam = parseFloat(inputs[0].value);
+                    student.quizEssay = parseFloat(inputs[1].value);
+                    student.quizPVM = parseFloat(inputs[2].value);
+                    student.quizJavaBasics = parseFloat(inputs[3].value);
+                    student.quizJSIntro = parseFloat(inputs[4].value);
+                    
+                    student.mp1 = parseFloat(inputs[5].value);
+                    student.mp2 = parseFloat(inputs[6].value);
+                    student.mp3 = parseFloat(inputs[7].value);
+                    student.mp3Docu = parseFloat(inputs[8].value);
+                    student.java1 = parseFloat(inputs[9].value);
+                    student.java2 = parseFloat(inputs[10].value);
+                    student.js1 = parseFloat(inputs[11].value);
+                    student.js2 = parseFloat(inputs[12].value);
+                    
+                    // Update the grade labels
+                    updateGradeLabels(student);
+                } catch (e) {
+                    alert("Please enter valid numbers (0-100) for scores.");
+                }
+            }
+        }
+
+        // Save to CSV
+        function saveToCSV() {
+            if (studentsData.length === 0) {
+                alert("No data to save!");
+                return;
+            }
+            
+            let csvContent = "Name,PrelimExam,QuizEssay,QuizPVM,QuizJavaBasics,QuizJSIntro,LectureAttendance," +
+                           "MP1,MP2,MP3,MP3Docu,Java1,Java2,JS1,JS2,LabAttendance\n";
+            
+            for (const student of studentsData) {
+                csvContent += `${student.name},${student.prelimExam},${student.quizEssay},` +
+                            `${student.quizPVM},${student.quizJavaBasics},${student.quizJSIntro},` +
+                            `${student.getLectureAttendanceScore()},${student.mp1},${student.mp2},` +
+                            `${student.mp3},${student.mp3Docu},${student.java1},${student.java2},` +
+                            `${student.js1},${student.js2},${student.getLabAttendanceScore()}\n`;
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'game_design_grades.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert("Game data saved successfully!");
+        }
+
+        // Initialize application
+        function initialize() {
+            setupAttendanceCheckboxes();
+            
+            // Add save button
+            const saveButton = document.createElement('button');
+            saveButton.className = 'game-button';
+            saveButton.innerHTML = '💾 Save Data';
+            saveButton.addEventListener('click', saveToCSV);
+            
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.insertBefore(saveButton, document.querySelector('.pixel-art'));
+        }
+
+        // Run initialization
+        initialize();
+    </script>
+</body>
+</html>
