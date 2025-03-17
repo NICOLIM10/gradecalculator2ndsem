@@ -696,7 +696,7 @@
             const classStanding = (0.62 * quizAvg) + (0.10 * lectureAttendanceScore) + 30;
             
             // Calculate Lecture Grade
-            const lectureGrade = Math.round((0.54 * student.prelimExam) + (0.46 * classStanding));
+            const lectureGrade = Math.min(100, Math.round((0.54 * student.prelimExam) + (0.46 * classStanding)));
             
             // Calculate Lab Work Average
             const labScores = [
@@ -710,7 +710,7 @@
             }
             labWorkAvg /= labScores.length;
             
-            const labGrade = Math.floor((0.90 * labWorkAvg) + (0.10 * labAttendanceScore));
+            const labGrade = Math.min(100, Math.floor((0.90 * labWorkAvg) + (0.10 * labAttendanceScore)));
             
             // Calculate final grade (40% lecture, 60% lab)
             const finalGrade = (lectureGrade * 0.4) + (labGrade * 0.6);
@@ -808,7 +808,41 @@
             const sidebar = document.querySelector('.sidebar');
             sidebar.insertBefore(saveButton, document.querySelector('.pixel-art'));
         }
+// Add this function to your JavaScript
+function enforceMaxValue() {
+    const inputs = document.querySelectorAll('input[type="number"]');
+    
+    inputs.forEach(input => {
+        // Add event listener for input to enforce max value while typing
+        input.addEventListener('input', function() {
+            if (this.value > 100) {
+                this.value = 100;
+            }
+        });
+        
+        // Also check on blur to catch any values that might slip through
+        input.addEventListener('blur', function() {
+            if (this.value > 100) {
+                this.value = 100;
+            }
+        });
+    });
+}
 
+// Call this function during initialization
+function initialize() {
+    setupAttendanceCheckboxes();
+    enforceMaxValue();
+    
+    // Add save button
+    const saveButton = document.createElement('button');
+    saveButton.className = 'game-button';
+    saveButton.innerHTML = '💾 Save Data';
+    saveButton.addEventListener('click', saveToCSV);
+    
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.insertBefore(saveButton, document.querySelector('.pixel-art'));
+}
         // Run initialization
         initialize();
     </script>
